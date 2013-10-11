@@ -220,21 +220,24 @@
     
     // Start the polling loop, asynchronously.
     timeout_id = window[ str_setTimeout ](function(){
-      
-      // Iterate over all elements to which the 'resize' event is bound.
-      elems.each(function(){
-        var elem = $(this),
-          width = elem.width(),
-          height = elem.height(),
-          data = $.data( this, str_data );
-        
-        // If element size has changed since the last time, update the element
-        // data store and trigger the 'resize' event.
-        if ( width !== data.w || height !== data.h ) {
-          elem.trigger( str_resize, [ data.w = width, data.h = height ] );
-        }
-        
-      });
+      try{
+        // Iterate over all elements to which the 'resize' event is bound.
+        elems.each(function(){
+          var elem = $(this),
+            width = elem.width(),
+            height = elem.height(),
+            data = $.data( this, str_data );
+          
+          // If element size has changed since the last time, update the element
+          // data store and trigger the 'resize' event.
+          if ( width !== data.w || height !== data.h ) {
+            elem.trigger( str_resize, [ data.w = width, data.h = height ] );
+          }    
+        });
+      }catch(ex){
+        //Do nothing
+        //This try catch is needed to avoid the script to crash when there is a SecurityError
+      }
       
       // Loop.
       loopy();
