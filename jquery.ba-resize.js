@@ -129,17 +129,48 @@
   $.event.special[ str_resize ] = {
     
     // Called only when the first 'resize' event callback is bound per element.
-    setup: function() {
-      // Since window has its own native 'resize' event, return false so that
+	// @param elemId must contain a unique id used to distinguish each element.
+	// this parameter is mandatory, if not set it will not possible to resize multiple elements.
+    setup: function(elemId) {
+	  // Since window has its own native 'resize' event, return false so that
       // jQuery will bind the event using DOM methods. Since only 'window'
       // objects have a .setTimeout method, this should be a sufficient test.
       // Unless, of course, we're throttling the 'resize' event for window.
       if ( !jq_resize[ str_throttle ] && this[ str_setTimeout ] ) { return false; }
       
+	  //Verify if the id is not empty
+	  if(elemId){
+		//Add a new property elemId to the current element (this). This way it will be 
+		//possible to use this id to compare each element stored in the elems jquery object.
+		this.elemId = elemId;
+	  }else{
+		//If the event resize is called without passing an id, the following default value 
+		//is set. If the resize event is called on multiple elements without setting a unique id,
+		//only the last element will stay in the elems object and thus only the last one will trigger
+		//the handler on resize.
+		this.elemId = 'no-id-set';
+	  }
+	  
       var elem = $(this);
-      
-      // Add this element to the list of internal elements to monitor.
-      elems = elems.add( elem );
+    
+	  var elemsWithoutDuplicate = $();
+	  elems.each(function(){
+		var currentElemId;
+		//IE generate a permission denied error when we try to access an element which is no more 
+		//loaded in the DOM, if the error is not catched, the code execution will be stopped. 
+		try{ 
+			currentElemId = this.elemId;
+		}catch(ex){
+			//A permission denied error happen
+			currentElemId = null;
+		}
+		//Add the element only if there is no permission denied error and the element is not 
+		//already in the elems object list
+		if(currentElemId !== null && currentElemId !== elemId){
+			elemsWithoutDuplicate.push(this);
+		}
+	  });
+      elems = elemsWithoutDuplicate.add( elem );
       
       // Initialize data store on the element.
       $.data( this, str_data, { w: elem.width(), h: elem.height() } );
